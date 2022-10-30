@@ -1,0 +1,26 @@
+body{
+	margin: 0 auto;
+	/*padding: 10px;*/
+}
+#time{
+	display: block;
+	height: 50px;
+	padding: 5px;
+	margin: 10px;
+}
+
+#true{
+	color: green;
+}
+#false{
+	color: red;
+}
+.stat{
+	font-weight: bold;
+}
+#stat{
+	display: flex;
+	justify-content: space-around;
+	height: 50px;
+	padding: 5px;
+}

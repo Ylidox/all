@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<div class="main">
+		<table>
+			<tr colspan="2">
+				<th colspan="2">TETRIS</th>
+			</tr>
+			<tr>
+				<td rowspan="9">
+					<canvas id="main"></canvas>
+				</td>
+			</tr>
+			<tr>
+				<td>score:</td>
+			</tr>
+			<tr>
+				<td id="score">0</td>
+			</tr>
+			<tr>
+				<td>next:</td>
+			</tr>
+			<tr>
+				<td class="nextFigure">
+					<canvas id="nextFigure"></canvas>
+				</td>
+			</tr>
+			<tr>
+				<td id="lines">lines: 0</td>
+			</tr>
+			<tr>
+				<td id="level">level: 1</td>
+			</tr>
+			<tr>
+				<td id="trt">trt: 0%</td>
+			</tr>
+			<tr>
+				<td id="drought">dr: 0</td>
+			</tr>
+			
+		</table>
+	</div>
+	<script src="js/figures.js"></script>
+	<script src="js/main.js"></script>
+</body>
+</html>

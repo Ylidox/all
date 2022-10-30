@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>LAB 2 OTIK</title>
+	<style>
+		body {
+		    margin: 0 auto;
+		    display: flex;
+		    justify-content: center;
+		    align-items: center;
+		    min-height: 100vh;
+		    max-width: 768px;
+		    background: radial-gradient(circle, skyblue, steelblue);
+		    color: #222;
+		}
+
+		div {
+		    width: 150px;
+		    height: 150px;
+		    display: flex;
+		    justify-content: center;
+		    align-items: center;
+		    font-size: 10em;
+		    font-weight: bold;
+		    border: 6px solid;
+		    border-radius: 8px;
+		    user-select: none;
+		    cursor: pointer;
+		}
+
+		input {
+		    display: none;
+		}
+	</style>
+</head>
+<body>
+
+	<div>+</div>
+	<input type="file">
+
+<script>
+	addEventListener('dragover', ev => ev.preventDefault())
+	addEventListener('drop', ev => ev.preventDefault())
+
+	let input = document.querySelector("input");
+	let text = "";
+	let message = [];
+
+	let get_bits = (string) => {
+		let out = [];
+
+		for(let i = 0; i < string.length; i++){
+			let n = string.charCodeAt(i);
+			out = out.concat(
+				(i != string.length - 1) ? (n >>> 0).toString(2).padStart(8, "0").split("").map(item => +item)
+										: (n >>> 0).toString(2).split("").map(item => +item)
+			);
+		}
+
+		return out;
+	}
+
+	let encode = (message) => {
+		let out = "";
+		let current = "";
+		for(let i = 0; i < message.length; i++){
+			if(current.length < 8){
+				current += message[i];
+			} 
+			else{
+				out += String.fromCharCode(parseInt(current, 2));
+				current = "";
+				i--;
+			}
+		}
+		out += String.fromCharCode(parseInt(current, 2));
+		return out;
+	}
+
+	document.querySelector('div').addEventListener('drop', (event) => {
+		event.preventDefault();
+
+		let read = (file) => {
+			const reader = new FileReader();
+			reader.readAsText(file, 'windows-1251'); // windows-1251
+			reader.onload = () => {
+				text = reader.result;
+
+				message = get_bits(text);
+			}
+		}
+
+		read(event.dataTransfer.files[0]);
+	});
+
+	let tree = {
+		field: null,
+		left: null,
+		right: null
+	};
+
+	let node = () => {
+		return {
+			field: null,
+			left: null,
+			right: null
+		};
+	};
+
+	let convert = (str) => {
+		return str.split('').map(item => +item);
+	}
+
+	let add = (tree, key, bit, value) => {
+		if(bit == key.length){
+			tree.field = value;
+			return;
+		}
+		if(key[bit]){
+			if(tree.right === null) tree.right = node();
+			add(tree.right, key, bit + 1, value);
+		}else{
+			if(tree.left === null) tree.left = node();
+			add(tree.left, key, bit + 1, value);
+		}
+	}
+
+	let get = (tree, key, bit) => {
+		if(bit == key.length){
+			return tree.field;
+		} 
+		if(key[bit]){
+			return get(tree.right, key, bit + 1);
+		}else{
+			return get(tree.left, key, bit + 1);
+		}
+	}
+
+	let decode = (tree, message) => {
+		let T = tree;
+		let index = 0;
+		let out = "";
+		for(let i = 0; i < message.length; ){
+			if(tree.field !== null){
+				out += tree.field;
+				tree = T;
+				continue;
+			}
+			if(message[i]){
+				tree = tree.right;
+				i++;
+			}else{
+				tree = tree.left;
+				i++;
+			}
+		}
+		out += tree.field;
+		return out;
+	}
+
+	let set_keys = (tree, keys) => {
+		for(let key in keys ){
+			add(tree, convert(key), 0, keys[key]);
+		}
+	}
+
+	let keys = {
+		'00' : "A",
+		'01' : "B",
+		'10' : "C",
+		'110' : "D",
+		'111' : "E"
+	}
+
+	set_keys(tree, keys);
+
+
+	let count_symbols = (mess) => {
+		let out = {};
+		for (let symb of mess){
+			if(out[symb] === undefined){
+				out[symb] = 1;
+			}
+			else{
+				out[symb]++;
+			}
+		}
+		return out;
+	}
+
+	let log_information = (decodeMessage, keys) => {
+		let count = count_symbols(decodeMessage);
+		console.log("Длина файла в символах первичного алфавита: ", decodeMessage.length);
+		console.log("Число вхождений каждого символа:\n", count);
+
+		let p = {};
+		for(let key in count){
+			p[key] = count[key] / decodeMessage.length;
+		}
+		console.log("Вероятность каждого символа:\n", p);
+
+		let I = {};
+		for(let key in keys){
+			I[keys[key]] = key.length;
+		}
+		console.log("Количество информации в каждом символе: ", I);
+
+		let size = 0;
+		for(let symb in count){
+			if(count[symb] * I[symb]) size += count[symb] * I[symb];
+		}
+		console.log("Суммарное количество информации(битах, байтах):", size, Math.ceil(size / 8));
+	}
+
+	let task1 = () => {
+		console.log("Содержание файла: ", text);
+		console.log(message.join(""));
+
+		let decodeMessage = decode(tree, message);
+
+		console.log(decodeMessage);
+		
+
+		log_information(decodeMessage, keys);
+	}
+
+	let decodeTask2 = (keys, mess) => {
+		let out = "";
+		let key = "";
+		for(let symb of mess){
+			key += symb;
+
+			if(keys[key] !== undefined){
+				out += keys[key];
+				key = "";
+			}
+		}
+		return out;
+	}
+
+	let task2 = () => {
+		let keys = {
+			"111": "a",
+			"222": "b",
+			"333": "c",
+			"444": "d",
+			"555": "e",
+			"5566": "f"
+		}
+		let decodeMessage = decodeTask2(keys, text);
+
+		console.log("Содержание файла: ", text);
+		console.log("Полученное выражение: ", decodeMessage);
+
+		log_information(decodeMessage, keys);
+	}
+</script>
+</body>
+</html>
